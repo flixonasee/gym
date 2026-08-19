@@ -687,8 +687,7 @@ export default function SchedaGianmaria() {
   useEffect(() => {
     if (!loaded) return;
     loadDay(day);
-    // eslint-disable-next-line
-  }, [dayIdx, loaded]);
+  }, [dayIdx, loaded, day, loadDay]);
 
   /* ---- ticking del timer di recupero, sopravvive a refresh/uscita ---- */
 
@@ -892,7 +891,6 @@ export default function SchedaGianmaria() {
 
   const done = progress.reduce((a, row) => a + row.filter(Boolean).length, 0);
   const total = totalSets(day);
-  const dayComplete = total > 0 && done === total;
 
   const weekStart = startOfWeekISO();
   const sessionsThisWeek = Object.values(history).flat().filter((d) => d >= weekStart).length;
