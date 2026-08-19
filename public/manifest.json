@@ -1,0 +1,21 @@
+{
+  "short_name": "Scheda Gianmaria",
+  "name": "Scheda Gianmaria - Technogym",
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "type": "image/png",
+      "sizes": "192x192"
+    },
+    {
+      "src": "icon-512.png",
+      "type": "image/png",
+      "sizes": "512x512"
+    }
+  ],
+  "start_url": ".",
+  "display": "standalone",
+  "orientation": "portrait",
+  "theme_color": "#E5E4E8",
+  "background_color": "#E5E4E8"
+}
