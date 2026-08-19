@@ -682,7 +682,7 @@ export default function SchedaGianmaria() {
 
       setLoaded(true);
     })();
-  }, []);
+  }, [loadDay]);
 
   useEffect(() => {
     if (!loaded) return;
