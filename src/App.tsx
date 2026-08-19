@@ -1,37 +1,35 @@
-import React, { useState, useEffect, useCallback } from "react";
-import { Check, RotateCcw, Dumbbell } from "lucide-react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
+import {
+  Check,
+  RotateCcw,
+  Dumbbell,
+  Settings as SettingsIcon,
+  ArrowLeft,
+  Minus,
+  Plus,
+  X,
+  ShoppingBag,
+} from "lucide-react";
 
 /* ---------------------------------------------------------------
    PALETTE — solo questi 5 colori, nessun altro
 --------------------------------------------------------------- */
 
-const YELLOW = "#F3D97E";
-const OLIVE = "#8E9868";
-const TERRACOTTA = "#E1927E";
-const BLUE = "#7DA4DC";
-const BLUSH = "#EDDBD1";
-const LAVENDER = "#A6ACDB";
+const YELLOW = "#FFE278";
+const OLIVE = "#D7EE82";
+const TERRACOTTA = "#FFA892";
+const BLUE = "#92BFFF";
+const BLUSH = "#FFECE1";
+const LAVENDER = "#BDC5FF";
 const GREEN_GAMBE = "rgb(183, 248, 54)";
 const BG = "#E5E4E8";
-const CARD = "#EDDBD1";
+const CARD = "#FFECE1";
 const BUTTON = "#FFFFFF";
 const INK = "#3A3742"; // neutro scuro, indispensabile per il testo leggibile — non fa parte della palette ma serve da inchiostro
 
 const PALETTE_CYCLE = [TERRACOTTA, YELLOW, LAVENDER, BLUE, OLIVE, BLUSH];
 
-function inkFor() {
-  return INK;
-}
-
-const CATEGORY_ORDER = [
-  "petto",
-  "spalle",
-  "bicipiti",
-  "tricipiti",
-  "dorso",
-  "gambe",
-  "addominali",
-];
+const CATEGORY_ORDER = ["petto", "spalle", "bicipiti", "tricipiti", "dorso", "gambe", "addominali"];
 const CATEGORY_LABELS = {
   petto: "Petto",
   spalle: "Spalle",
@@ -42,13 +40,7 @@ const CATEGORY_LABELS = {
   addominali: "Addominali",
 };
 const CATEGORY = Object.fromEntries(
-  CATEGORY_ORDER.map((key, i) => [
-    key,
-    {
-      label: CATEGORY_LABELS[key],
-      color: PALETTE_CYCLE[i % PALETTE_CYCLE.length],
-    },
-  ])
+  CATEGORY_ORDER.map((key, i) => [key, { label: CATEGORY_LABELS[key], color: PALETTE_CYCLE[i % PALETTE_CYCLE.length] }])
 );
 CATEGORY.gambe.color = GREEN_GAMBE;
 
@@ -66,24 +58,9 @@ const DAYS = [
       { name: "Pectoral machine", sets: 2, reps: "10", cat: "petto" },
       { name: "Shoulder press", sets: 3, reps: "10", cat: "spalle" },
       { name: "Alzate laterali", sets: 3, reps: "10", cat: "spalle" },
-      {
-        name: "Curl bicipiti seduto su panca",
-        sets: 3,
-        reps: "10",
-        cat: "bicipiti",
-      },
-      {
-        name: "Curl bicipiti su panca Scott",
-        sets: 2,
-        reps: "10",
-        cat: "bicipiti",
-      },
-      {
-        name: "Total abdominal machine",
-        sets: 4,
-        reps: "10-12",
-        cat: "addominali",
-      },
+      { name: "Curl bicipiti seduto su panca", sets: 3, reps: "10", cat: "bicipiti" },
+      { name: "Curl bicipiti su panca Scott", sets: 2, reps: "10", cat: "bicipiti" },
+      { name: "Total abdominal machine", sets: 4, reps: "10-12", cat: "addominali" },
     ],
   },
   {
@@ -99,12 +76,7 @@ const DAYS = [
       { name: "Face pull ai cavi", sets: 2, reps: "10", cat: "dorso" },
       { name: "Pushdown tricipiti", sets: 3, reps: "10", cat: "tricipiti" },
       { name: "Overhead tricipiti", sets: 2, reps: "10", cat: "tricipiti" },
-      {
-        name: "Total abdominal machine",
-        sets: 4,
-        reps: "10-12",
-        cat: "addominali",
-      },
+      { name: "Total abdominal machine", sets: 4, reps: "10-12", cat: "addominali" },
     ],
   },
   {
@@ -119,12 +91,7 @@ const DAYS = [
       { name: "Leg extension", sets: 3, reps: "10", cat: "gambe" },
       { name: "Hip thrust", sets: 3, reps: "10", cat: "gambe" },
       { name: "Leg curl", sets: 3, reps: "10", cat: "gambe" },
-      {
-        name: "Total abdominal machine",
-        sets: 4,
-        reps: "10-12",
-        cat: "addominali",
-      },
+      { name: "Total abdominal machine", sets: 4, reps: "10-12", cat: "addominali" },
     ],
   },
   {
@@ -139,24 +106,9 @@ const DAYS = [
       { name: "Pectoral machine", sets: 3, reps: "10", cat: "petto" },
       { name: "Lat machine", sets: 3, reps: "10", cat: "dorso" },
       { name: "Pulley", sets: 3, reps: "10", cat: "dorso" },
-      {
-        name: "Curl bicipiti seduto su panca",
-        sets: 3,
-        reps: "10",
-        cat: "bicipiti",
-      },
-      {
-        name: "Pushdown tricipiti ai cavi",
-        sets: 3,
-        reps: "10",
-        cat: "tricipiti",
-      },
-      {
-        name: "Total abdominal machine",
-        sets: 4,
-        reps: "10-12",
-        cat: "addominali",
-      },
+      { name: "Curl bicipiti seduto su panca", sets: 3, reps: "10", cat: "bicipiti" },
+      { name: "Pushdown tricipiti ai cavi", sets: 3, reps: "10", cat: "tricipiti" },
+      { name: "Total abdominal machine", sets: 4, reps: "10-12", cat: "addominali" },
     ],
   },
   {
@@ -176,6 +128,76 @@ const DAYS = [
     ],
   },
 ];
+
+const BAG_ITEMS = [
+  "Lucchetto",
+  "Infradito",
+  "Costume da bagno",
+  "Cuffia piscina",
+  "Asciugamano sauna",
+  "Asciugamano doccia",
+  "Asciugamanino attrezzi",
+  "Cambio per uscire",
+  "Acqua",
+];
+
+const REST_OPTIONS = [
+  { label: "1 min", seconds: 60 },
+  { label: "1,5 min", seconds: 90 },
+  { label: "2 min", seconds: 120 },
+];
+
+// Chiave pubblica VAPID per le notifiche push — questa e' sicura da avere nel
+// codice lato client (e' fatta apposta per essere pubblica). La chiave privata
+// resta SOLO nelle variabili d'ambiente di Vercel, mai qui.
+const VAPID_PUBLIC_KEY =
+  "BKgMEgUmsVOcBKWUL5lLQ8luX5LUOMoFVuDbyVnryMPpNiLdQDSDIAeVc8kDJmR1uoKuf-ZVnupxhQbVnod0mJA";
+
+function urlBase64ToUint8Array(base64String) {
+  const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
+  const base64 = (base64String + padding).replace(/-/g, "+").replace(/_/g, "/");
+  const rawData = window.atob(base64);
+  const outputArray = new Uint8Array(rawData.length);
+  for (let i = 0; i < rawData.length; ++i) {
+    outputArray[i] = rawData.charCodeAt(i);
+  }
+  return outputArray;
+}
+
+async function subscribeToPush() {
+  if (!("serviceWorker" in navigator) || !("PushManager" in window)) return false;
+  try {
+    const registration = await navigator.serviceWorker.register("/sw.js");
+    await navigator.serviceWorker.ready;
+    let subscription = await registration.pushManager.getSubscription();
+    if (!subscription) {
+      subscription = await registration.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY),
+      });
+    }
+    await fetch("/api/subscribe", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(subscription),
+    });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+async function scheduleRestPush(seconds) {
+  try {
+    await fetch("/api/schedule-rest", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ seconds }),
+    });
+  } catch {
+    /* se il backend non e' configurato, ignora: restano comunque suono/beep locali */
+  }
+}
 
 function todayISO() {
   return new Date().toISOString().slice(0, 10);
@@ -197,14 +219,18 @@ function totalSets(day) {
   return day.exercises.reduce((a, ex) => a + ex.sets, 0);
 }
 
+function formatMMSS(totalSeconds) {
+  const m = Math.floor(totalSeconds / 60);
+  const s = totalSeconds % 60;
+  return `${m}:${String(s).padStart(2, "0")}`;
+}
+
 /* ---------------------------------------------------------------
    STORAGE
 --------------------------------------------------------------- */
 
 const hasCloudStorage =
-  typeof window !== "undefined" &&
-  window.storage &&
-  typeof window.storage.get === "function";
+  typeof window !== "undefined" && window.storage && typeof window.storage.get === "function";
 
 async function storeGet(key) {
   if (hasCloudStorage) {
@@ -238,30 +264,38 @@ async function storeSet(key, value) {
   }
 }
 
+async function storeDelete(key) {
+  if (hasCloudStorage) {
+    try {
+      await window.storage.delete(key);
+      return;
+    } catch {
+      /* fall through */
+    }
+  }
+  try {
+    window.localStorage.removeItem(key);
+  } catch {
+    /* silent */
+  }
+}
+
 /* ---------------------------------------------------------------
-   BUBBLE CLUSTER — riepilogo settimanale, ispirato alle bolle
-   di statistiche dell'immagine di riferimento
+   BUBBLE CLUSTER — riepilogo settimanale
 --------------------------------------------------------------- */
 
 function BubbleCluster({ days, history, weekStart }) {
   return (
     <div className="flex justify-between gap-2">
       {days.map((d) => {
-        const doneRecently = (history[d.id] || []).some(
-          (dt) => dt >= weekStart
-        );
+        const doneRecently = (history[d.id] || []).some((dt) => dt >= weekStart);
         const bg = doneRecently ? d.color : "rgba(142,137,143,0.14)";
         const ink = doneRecently ? INK : "rgba(58,55,66,0.35)";
         return (
           <div
             key={d.id}
             className="rounded-full flex items-center justify-center font-semibold flex-1"
-            style={{
-              aspectRatio: "1 / 1",
-              background: bg,
-              color: ink,
-              fontSize: "14px",
-            }}
+            style={{ aspectRatio: "1 / 1", background: bg, color: ink, fontSize: "14px" }}
           >
             {d.short}
           </div>
@@ -272,16 +306,212 @@ function BubbleCluster({ days, history, weekStart }) {
 }
 
 /* ---------------------------------------------------------------
+   GYM BAG CHECKLIST
+--------------------------------------------------------------- */
+
+function GymBag({ checked, onToggle }) {
+  const [open, setOpen] = useState(false);
+  const done = checked.filter(Boolean).length;
+
+  return (
+    <div className="rounded-2xl p-4 mb-4" style={{ background: CARD }}>
+      <button className="w-full flex items-center justify-between" onClick={() => setOpen((o) => !o)}>
+        <div className="flex items-center gap-2">
+          <ShoppingBag size={16} color={INK} />
+          <span className="text-sm font-semibold" style={{ color: INK }}>
+            Borsa della palestra
+          </span>
+        </div>
+        <span
+          className="text-xs font-bold px-2.5 py-1 rounded-full"
+          style={{ background: done === BAG_ITEMS.length ? OLIVE : BUTTON, color: done === BAG_ITEMS.length ? "#FFFFFF" : INK }}
+        >
+          {done}/{BAG_ITEMS.length}
+        </span>
+      </button>
+
+      {open && (
+        <div className="flex flex-col gap-2 mt-3">
+          {BAG_ITEMS.map((item, i) => (
+            <button
+              key={item}
+              onClick={() => onToggle(i)}
+              className="flex items-center gap-2.5 active:scale-[0.98] transition-transform"
+            >
+              <span
+                className="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0"
+                style={{ background: checked[i] ? OLIVE : BUTTON }}
+              >
+                {checked[i] && <Check size={12} color="#FFFFFF" strokeWidth={3} />}
+              </span>
+              <span
+                className="text-sm text-left"
+                style={{ color: checked[i] ? "rgba(58,55,66,0.4)" : INK, textDecoration: checked[i] ? "line-through" : "none" }}
+              >
+                {item}
+              </span>
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ---------------------------------------------------------------
+   REST TIMER BAR
+--------------------------------------------------------------- */
+
+function RestTimerBar({ remaining, duration, onSkip }) {
+  const pct = duration ? Math.max(0, Math.min(1, remaining / duration)) : 0;
+  return (
+    <div className="rounded-2xl p-4 mb-4" style={{ background: INK }}>
+      <div className="flex items-center justify-between mb-2">
+        <span className="text-xs font-semibold tracking-wide" style={{ color: "rgba(255,255,255,0.7)" }}>
+          RECUPERO
+        </span>
+        <div className="flex items-center gap-3">
+          <span className="text-lg font-bold tabular-nums" style={{ color: "#FFFFFF" }}>
+            {formatMMSS(remaining)}
+          </span>
+          <button onClick={onSkip} className="active:scale-90 transition-transform" aria-label="Salta recupero">
+            <X size={16} color="rgba(255,255,255,0.7)" />
+          </button>
+        </div>
+      </div>
+      <div className="h-1.5 rounded-full overflow-hidden" style={{ background: "rgba(255,255,255,0.18)" }}>
+        <div
+          className="h-full rounded-full"
+          style={{ width: `${pct * 100}%`, background: YELLOW, transition: "width 1s linear" }}
+        />
+      </div>
+    </div>
+  );
+}
+
+/* ---------------------------------------------------------------
+   SETTINGS PAGE
+--------------------------------------------------------------- */
+
+function SettingsPage({ restDuration, onChangeDuration, notifyEnabled, onToggleNotify, onBack }) {
+  return (
+    <div className="w-full max-w-md px-4 pb-10" style={{ minHeight: "100vh" }}>
+      <div className="flex items-center gap-3 pt-6 pb-6">
+        <button
+          onClick={onBack}
+          className="w-10 h-10 rounded-full flex items-center justify-center active:scale-90 transition-transform"
+          style={{ background: BUTTON }}
+          aria-label="Indietro"
+        >
+          <ArrowLeft size={18} color={INK} />
+        </button>
+        <h1 className="font-extrabold" style={{ color: INK, fontSize: "24px" }}>
+          Impostazioni
+        </h1>
+      </div>
+
+      <div className="rounded-2xl p-4 mb-4" style={{ background: CARD }}>
+        <p className="text-sm font-semibold mb-1" style={{ color: INK }}>
+          Timer di recupero
+        </p>
+        <p className="text-xs mb-4" style={{ color: "rgba(58,55,66,0.55)" }}>
+          Durata del countdown dopo ogni serie completata
+        </p>
+        <div className="flex gap-2">
+          {REST_OPTIONS.map((opt) => {
+            const active = restDuration === opt.seconds;
+            return (
+              <button
+                key={opt.seconds}
+                onClick={() => onChangeDuration(opt.seconds)}
+                className="flex-1 py-3 rounded-xl font-semibold text-sm active:scale-95 transition-transform"
+                style={{ background: active ? INK : BUTTON, color: active ? "#FFFFFF" : INK }}
+              >
+                {opt.label}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      <div className="rounded-2xl p-4" style={{ background: CARD }}>
+        <p className="text-sm font-semibold mb-1" style={{ color: INK }}>
+          Avviso a fine recupero
+        </p>
+        <p className="text-xs mb-4" style={{ color: "rgba(58,55,66,0.55)" }}>
+          Suono e notifica quando il countdown finisce — funziona anche ad app chiusa se l'hai salvata sulla schermata Home. La vibrazione locale funziona solo su Android.
+        </p>
+        <button
+          onClick={onToggleNotify}
+          className="w-full py-3 rounded-xl font-semibold text-sm active:scale-95 transition-transform"
+          style={{ background: notifyEnabled ? OLIVE : BUTTON, color: notifyEnabled ? "#FFFFFF" : INK }}
+        >
+          {notifyEnabled ? "Attivo" : "Attiva avviso"}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function playBeep(ctx) {
+  try {
+    if (!ctx) return;
+    if (ctx.state === "suspended") ctx.resume();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.frequency.value = 880;
+    gain.gain.setValueAtTime(0.15, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.6);
+    osc.start();
+    osc.stop(ctx.currentTime + 0.6);
+  } catch {
+    /* audio non disponibile, ignora */
+  }
+}
+
+function notifyRestOver(enabled, audioCtx) {
+  playBeep(audioCtx);
+  if (navigator.vibrate) {
+    try {
+      navigator.vibrate([200, 100, 200]);
+    } catch {
+      /* ignora */
+    }
+  }
+  if (enabled && typeof Notification !== "undefined" && Notification.permission === "granted") {
+    try {
+      new Notification("Recupero terminato", { body: "Pronto per la prossima serie 💪" });
+    } catch {
+      /* ignora */
+    }
+  }
+}
+
+/* ---------------------------------------------------------------
    MAIN APP
 --------------------------------------------------------------- */
 
 export default function SchedaGianmaria() {
+  const [view, setView] = useState("main"); // 'main' | 'settings'
   const [dayIdx, setDayIdx] = useState(0);
   const day = DAYS[dayIdx];
 
   const [progress, setProgress] = useState(() => emptyProgress(DAYS[0]));
+  const [weights, setWeights] = useState({}); // { exIdx: { value, date } }
   const [history, setHistory] = useState({});
+  const [bagChecked, setBagChecked] = useState(() => Array(BAG_ITEMS.length).fill(false));
   const [loaded, setLoaded] = useState(false);
+
+  const [restDuration, setRestDuration] = useState(90);
+  const [restEndAt, setRestEndAt] = useState(null);
+  const [notifyEnabled, setNotifyEnabled] = useState(false);
+  const [now, setNow] = useState(Date.now());
+  const tickRef = useRef(null);
+  const audioCtxRef = useRef(null);
+
+  /* ---- caricamento iniziale: giorno corrente, storico, timer, borsa ---- */
 
   const loadDay = useCallback(async (d) => {
     const raw = await storeGet(`day-progress:${d.id}`);
@@ -290,48 +520,180 @@ export default function SchedaGianmaria() {
         const parsed = JSON.parse(raw);
         if (parsed.date === todayISO() && Array.isArray(parsed.completedSets)) {
           setProgress(parsed.completedSets);
-          return;
+        } else {
+          setProgress(emptyProgress(d));
         }
       } catch {
-        /* fall through */
+        setProgress(emptyProgress(d));
       }
+    } else {
+      setProgress(emptyProgress(d));
     }
-    setProgress(emptyProgress(d));
-  }, []);
 
-  const loadHistory = useCallback(async () => {
-    const next = {};
-    for (const d of DAYS) {
-      const raw = await storeGet(`history:${d.id}`);
-      try {
-        next[d.id] = raw ? JSON.parse(raw) : [];
-      } catch {
-        next[d.id] = [];
+    // pesi salvati per esercizio (condivisi tra i giorni se il nome coincide,
+    // es. "Total abdominal machine" ricorda lo stesso peso ovunque compaia)
+    const w = {};
+    for (let i = 0; i < d.exercises.length; i++) {
+      const rawW = await storeGet(`weight:${d.exercises[i].name}`);
+      if (rawW) {
+        try {
+          w[i] = JSON.parse(rawW);
+        } catch {
+          /* skip */
+        }
       }
     }
-    setHistory(next);
+    setWeights(w);
   }, []);
 
   useEffect(() => {
     (async () => {
-      await loadDay(DAYS[0]);
-      await loadHistory();
+      // storico di tutti i giorni
+      const hist = {};
+      for (const d of DAYS) {
+        const raw = await storeGet(`history:${d.id}`);
+        try {
+          hist[d.id] = raw ? JSON.parse(raw) : [];
+        } catch {
+          hist[d.id] = [];
+        }
+      }
+      setHistory(hist);
+
+      // apri sul primo giorno non ancora completato questa settimana
+      const ws = startOfWeekISO();
+      let startIdx = DAYS.findIndex((d) => !(hist[d.id] || []).some((dt) => dt >= ws));
+      if (startIdx === -1) startIdx = 0;
+      setDayIdx(startIdx);
+      await loadDay(DAYS[startIdx]);
+
+      // borsa della palestra (si azzera ogni giorno)
+      const rawBag = await storeGet(`gym-bag:${todayISO()}`);
+      if (rawBag) {
+        try {
+          const parsed = JSON.parse(rawBag);
+          if (Array.isArray(parsed) && parsed.length === BAG_ITEMS.length) setBagChecked(parsed);
+        } catch {
+          /* skip */
+        }
+      }
+
+      // durata timer di recupero salvata
+      const rawDur = await storeGet("rest-duration");
+      if (rawDur) {
+        const d = parseInt(rawDur, 10);
+        if (!Number.isNaN(d)) setRestDuration(d);
+      }
+
+      // preferenza notifiche
+      const rawNotify = await storeGet("notify-enabled");
+      if (rawNotify === "1") setNotifyEnabled(true);
+
+      // timer di recupero eventualmente ancora in corso
+      const rawEnd = await storeGet("rest-end-at");
+      if (rawEnd) {
+        const end = parseInt(rawEnd, 10);
+        if (!Number.isNaN(end) && end > Date.now()) {
+          setRestEndAt(end);
+        } else {
+          storeDelete("rest-end-at");
+        }
+      }
+
       setLoaded(true);
     })();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
     if (!loaded) return;
     loadDay(day);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line
   }, [dayIdx, loaded]);
 
+  /* ---- ticking del timer di recupero, sopravvive a refresh/uscita ---- */
+
+  useEffect(() => {
+    if (restEndAt) {
+      tickRef.current = setInterval(() => setNow(Date.now()), 500);
+      return () => clearInterval(tickRef.current);
+    }
+  }, [restEndAt]);
+
+  useEffect(() => {
+    if (restEndAt && now >= restEndAt) {
+      setRestEndAt(null);
+      storeDelete("rest-end-at");
+      notifyRestOver(notifyEnabled, audioCtxRef.current);
+    }
+  }, [now, restEndAt, notifyEnabled]);
+
+  const restRemaining = restEndAt ? Math.max(0, Math.ceil((restEndAt - now) / 1000)) : 0;
+
+  const startRestTimer = async () => {
+    const end = Date.now() + restDuration * 1000;
+    setRestEndAt(end);
+    await storeSet("rest-end-at", String(end));
+    if (notifyEnabled) {
+      scheduleRestPush(restDuration);
+    }
+  };
+
+  const skipRestTimer = async () => {
+    setRestEndAt(null);
+    await storeDelete("rest-end-at");
+  };
+
+  const changeRestDuration = async (seconds) => {
+    setRestDuration(seconds);
+    await storeSet("rest-duration", String(seconds));
+  };
+
+  const toggleNotify = async () => {
+    // crea/sblocca l'AudioContext qui, dentro un tocco diretto dell'utente:
+    // e' l'unico momento in cui iOS Safari permette di avviare l'audio
+    if (!audioCtxRef.current) {
+      try {
+        audioCtxRef.current = new (window.AudioContext || window.webkitAudioContext)();
+      } catch {
+        /* audio non disponibile su questo dispositivo */
+      }
+    }
+    if (audioCtxRef.current && audioCtxRef.current.state === "suspended") {
+      audioCtxRef.current.resume();
+    }
+    // suono di conferma immediato, cosi si sente che e' andato a buon fine
+    playBeep(audioCtxRef.current);
+
+    if (!notifyEnabled) {
+      if (typeof Notification !== "undefined") {
+        try {
+          const perm = await Notification.requestPermission();
+          if (perm === "granted") {
+            setNotifyEnabled(true);
+            await storeSet("notify-enabled", "1");
+            // iscrizione alle notifiche push vere (funzionano anche ad app chiusa,
+            // solo se l'app e' installata sulla schermata Home)
+            subscribeToPush();
+            return;
+          }
+        } catch {
+          /* ignora */
+        }
+      }
+      // anche se le notifiche push non sono disponibili, attiviamo comunque
+      // vibrazione (dove supportata) e suono, che non richiedono permesso
+      setNotifyEnabled(true);
+      await storeSet("notify-enabled", "1");
+    } else {
+      setNotifyEnabled(false);
+      await storeSet("notify-enabled", "0");
+    }
+  };
+
+  /* ---- progressi giornalieri ---- */
+
   const saveProgress = useCallback(async (d, next) => {
-    await storeSet(
-      `day-progress:${d.id}`,
-      JSON.stringify({ date: todayISO(), completedSets: next })
-    );
+    await storeSet(`day-progress:${d.id}`, JSON.stringify({ date: todayISO(), completedSets: next }));
   }, []);
 
   const toggleSet = (exIdx, setIdx) => {
@@ -342,6 +704,7 @@ export default function SchedaGianmaria() {
     saveProgress(day, next);
 
     if (!wasDone) {
+      startRestTimer();
       const allDone = next.every((row) => row.every(Boolean));
       if (allDone) recordCompletion(day);
     }
@@ -363,13 +726,33 @@ export default function SchedaGianmaria() {
     }
   };
 
+  /* ---- peso per esercizio ---- */
+
+  const changeWeight = (exIdx, delta) => {
+    const exerciseName = day.exercises[exIdx].name;
+    const current = weights[exIdx]?.value ?? 0;
+    const next = Math.max(0, Math.round((current + delta) * 2) / 2);
+    const entry = { value: next, date: todayISO() };
+    setWeights((w) => ({ ...w, [exIdx]: entry }));
+    storeSet(`weight:${exerciseName}`, JSON.stringify(entry));
+  };
+
+  /* ---- borsa della palestra ---- */
+
+  const toggleBagItem = (i) => {
+    const next = bagChecked.slice();
+    next[i] = !next[i];
+    setBagChecked(next);
+    storeSet(`gym-bag:${todayISO()}`, JSON.stringify(next));
+  };
+
+  /* ---- reset ---- */
+
   const resetDay = async () => {
     const fresh = emptyProgress(day);
     setProgress(fresh);
     saveProgress(day, fresh);
 
-    // rimuove anche la data odierna dallo storico, se presente,
-    // cosi il riepilogo settimanale non mostra piu il giorno come completato
     const raw = await storeGet(`history:${day.id}`);
     let arr = [];
     try {
@@ -387,9 +770,7 @@ export default function SchedaGianmaria() {
 
   const resetWeek = async () => {
     const weekStartNow = startOfWeekISO();
-
     for (const d of DAYS) {
-      // pulisce lo storico di completamento della settimana corrente
       const raw = await storeGet(`history:${d.id}`);
       let arr = [];
       try {
@@ -403,15 +784,9 @@ export default function SchedaGianmaria() {
         setHistory((h) => ({ ...h, [d.id]: filtered }));
       }
 
-      // azzera anche le serie segnate di OGNI giorno, non solo di quello aperto
       const freshSets = emptyProgress(d);
-      await storeSet(
-        `day-progress:${d.id}`,
-        JSON.stringify({ date: todayISO(), completedSets: freshSets })
-      );
-      if (d.id === day.id) {
-        setProgress(freshSets);
-      }
+      await storeSet(`day-progress:${d.id}`, JSON.stringify({ date: todayISO(), completedSets: freshSets }));
+      if (d.id === day.id) setProgress(freshSets);
     }
   };
 
@@ -420,15 +795,27 @@ export default function SchedaGianmaria() {
   const dayComplete = total > 0 && done === total;
 
   const weekStart = startOfWeekISO();
-  const sessionsThisWeek = Object.values(history)
-    .flat()
-    .filter((d) => d >= weekStart).length;
+  const sessionsThisWeek = Object.values(history).flat().filter((d) => d >= weekStart).length;
+
+  if (view === "settings") {
+    return (
+      <div className="min-h-screen w-full flex justify-center" style={{ background: BG, fontFamily: "'Google Sans Flex', sans-serif" }}>
+        <style>{`
+          @import url('https://fonts.googleapis.com/css2?family=Google+Sans+Flex:wght@400;500;600;700;800;900&display=swap');
+        `}</style>
+        <SettingsPage
+          restDuration={restDuration}
+          onChangeDuration={changeRestDuration}
+          notifyEnabled={notifyEnabled}
+          onToggleNotify={toggleNotify}
+          onBack={() => setView("main")}
+        />
+      </div>
+    );
+  }
 
   return (
-    <div
-      className="min-h-screen w-full flex justify-center"
-      style={{ background: BG, fontFamily: "'Google Sans Flex', sans-serif" }}
-    >
+    <div className="min-h-screen w-full flex justify-center" style={{ background: BG, fontFamily: "'Google Sans Flex', sans-serif" }}>
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Google+Sans+Flex:wght@400;500;600;700;800;900&display=swap');
         @media (prefers-reduced-motion: reduce) {
@@ -436,50 +823,48 @@ export default function SchedaGianmaria() {
         }
       `}</style>
 
-      <div
-        className="w-full max-w-md px-4 pb-10"
-        style={{ minHeight: "100vh" }}
-      >
+      <div className="w-full max-w-md px-4 pb-10" style={{ minHeight: "100vh" }}>
         {/* TOP BAR */}
         <div className="flex items-center justify-between pt-6 pb-5">
-          <div
-            className="w-10 h-10 rounded-2xl flex items-center justify-center"
-            style={{ background: INK }}
-          >
+          <div className="w-10 h-10 rounded-2xl flex items-center justify-center" style={{ background: INK }}>
             <Dumbbell size={17} color="#FFFFFF" />
           </div>
-          <button
-            onClick={resetDay}
-            className="w-10 h-10 rounded-full flex items-center justify-center active:scale-90 transition-transform"
-            style={{ background: BUTTON }}
-            aria-label="Reset giorno"
-          >
-            <RotateCcw size={16} color={INK} />
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setView("settings")}
+              className="w-10 h-10 rounded-full flex items-center justify-center active:scale-90 transition-transform"
+              style={{ background: BUTTON }}
+              aria-label="Impostazioni"
+            >
+              <SettingsIcon size={16} color={INK} />
+            </button>
+            <button
+              onClick={resetDay}
+              className="w-10 h-10 rounded-full flex items-center justify-center active:scale-90 transition-transform"
+              style={{ background: BUTTON }}
+              aria-label="Reset giorno"
+            >
+              <RotateCcw size={16} color={INK} />
+            </button>
+          </div>
         </div>
 
         {/* HEADLINE */}
         <div className="mb-6">
-          <p
-            className="text-xs font-medium mb-1"
-            style={{ color: "rgba(58,55,66,0.55)", letterSpacing: "0.02em" }}
-          >
+          <p className="text-xs font-medium mb-1" style={{ color: "rgba(58,55,66,0.55)", letterSpacing: "0.02em" }}>
             Technogym · 5 giorni
           </p>
-          <h1
-            className="leading-tight"
-            style={{ color: INK, fontSize: "32px" }}
-          >
+          <h1 className="leading-tight" style={{ color: INK, fontSize: "32px" }}>
             <span style={{ fontWeight: 400 }}>Scheda di </span>
             <span style={{ fontWeight: 800 }}>Gianmaria</span>
           </h1>
         </div>
 
+        {/* REST TIMER (se attivo) */}
+        {restEndAt && <RestTimerBar remaining={restRemaining} duration={restDuration} onSkip={skipRestTimer} />}
+
         {/* DAY PILLS */}
-        <div
-          className="flex gap-2 mb-5 overflow-x-auto"
-          style={{ scrollbarWidth: "none" }}
-        >
+        <div className="flex gap-2 mb-4 overflow-x-auto" style={{ scrollbarWidth: "none" }}>
           {DAYS.map((d, i) => {
             const active = i === dayIdx;
             return (
@@ -487,10 +872,7 @@ export default function SchedaGianmaria() {
                 key={d.id}
                 onClick={() => setDayIdx(i)}
                 className="flex-shrink-0 px-5 py-2.5 rounded-full font-semibold text-sm active:scale-95 transition-transform"
-                style={{
-                  background: active ? INK : BUTTON,
-                  color: active ? "#FFFFFF" : INK,
-                }}
+                style={{ background: active ? INK : BUTTON, color: active ? "#FFFFFF" : INK }}
               >
                 {d.short}
               </button>
@@ -498,103 +880,63 @@ export default function SchedaGianmaria() {
           })}
         </div>
 
+        {/* BORSA DELLA PALESTRA */}
+        <GymBag checked={bagChecked} onToggle={toggleBagItem} />
+
         {/* HERO DAY CARD */}
-        <div
-          className="rounded-3xl p-6 mb-4 relative overflow-hidden"
-          style={{ background: day.color }}
-        >
+        <div className="rounded-3xl p-6 mb-4 relative overflow-hidden" style={{ background: day.color }}>
           <img
             src={day.illustration}
             alt=""
             className="absolute pointer-events-none"
-            style={{
-              bottom: "0px",
-              right: "-10px",
-              width: "240px",
-              height: "240px",
-              opacity: 0.6,
-            }}
+            style={{ bottom: "-4px", right: "-2px", width: "150px", height: "150px", opacity: 0.95 }}
           />
           <div className="flex items-start justify-between mb-6 relative">
             <div>
-              <p
-                className="text-sm font-medium mb-1"
-                style={{ color: INK, opacity: 0.65 }}
-              >
+              <p className="text-sm font-medium mb-1" style={{ color: INK, opacity: 0.65 }}>
                 {day.focus}
               </p>
-              <h2
-                className="font-extrabold leading-none"
-                style={{ color: INK, fontSize: "34px" }}
-              >
+              <h2 className="font-extrabold leading-none" style={{ color: INK, fontSize: "34px" }}>
                 {day.title}
               </h2>
             </div>
-            <span
-              className="text-xs font-bold px-3 py-1.5 rounded-full flex-shrink-0"
-              style={{ background: "rgba(255,255,255,1)", color: INK }}
-            >
+            <span className="text-xs font-bold px-3 py-1.5 rounded-full flex-shrink-0" style={{ background: "rgba(255,255,255,0.5)", color: INK }}>
               {done}/{total}
             </span>
           </div>
-          <div
-            className="h-2 rounded-full overflow-hidden relative"
-            style={{
-              background: "rgba(255,255,255,0.28)",
-              marginBottom: "110px",
-            }}
-          >
+          <div className="h-2 rounded-full overflow-hidden relative" style={{ background: "rgba(255,255,255,0.28)", marginBottom: "110px" }}>
             <div
               className="h-full rounded-full"
-              style={{
-                width: `${total ? (done / total) * 100 : 0}%`,
-                background: INK,
-                transition: "width 0.3s ease",
-              }}
+              style={{ width: `${total ? (done / total) * 100 : 0}%`, background: INK, transition: "width 0.3s ease" }}
             />
           </div>
         </div>
 
-        {/* EXERCISES — pannello bianco sotto la hero card */}
+        {/* EXERCISES */}
         <div className="flex flex-col gap-2.5 mb-6">
           {day.exercises.map((ex, exIdx) => {
             const cat = CATEGORY[ex.cat];
             const row = progress[exIdx] || [];
             const rowDone = row.filter(Boolean).length;
+            const w = weights[exIdx];
+            const isToday = w && w.date === todayISO();
+
             return (
-              <div
-                key={exIdx}
-                className="rounded-2xl p-4"
-                style={{
-                  background: CARD,
-                  boxShadow: "0 1px 0 rgba(58,55,66,0.08)",
-                }}
-              >
+              <div key={exIdx} className="rounded-2xl p-4" style={{ background: CARD, boxShadow: "0 1px 0 rgba(58,55,66,0.08)" }}>
                 <div className="flex items-center justify-between mb-2">
-                  <span
-                    className="text-[10px] font-bold px-2.5 py-1 rounded-full"
-                    style={{ color: INK, background: cat.color }}
-                  >
+                  <span className="text-[10px] font-bold px-2.5 py-1 rounded-full" style={{ color: INK, background: cat.color }}>
                     {cat.label}
                   </span>
-                  <span
-                    className="text-xs font-semibold"
-                    style={{ color: "rgba(58,55,66,0.55)" }}
-                  >
+                  <span className="text-xs font-semibold" style={{ color: "rgba(58,55,66,0.55)" }}>
                     {ex.sets}×{ex.reps}
                   </span>
                 </div>
 
-                <p
-                  className="text-base font-semibold mb-3"
-                  style={{
-                    color: rowDone === ex.sets ? "rgba(58,55,66,0.4)" : INK,
-                  }}
-                >
+                <p className="text-base font-semibold mb-3" style={{ color: rowDone === ex.sets ? "rgba(58,55,66,0.4)" : INK }}>
                   {ex.name}
                 </p>
 
-                <div className="flex gap-2">
+                <div className="flex gap-2 mb-3">
                   {row.map((setDone, setIdx) => (
                     <button
                       key={setIdx}
@@ -606,22 +948,47 @@ export default function SchedaGianmaria() {
                       {setDone ? (
                         <Check size={19} color="#FFFFFF" strokeWidth={3} />
                       ) : (
-                        <span
-                          className="text-sm font-bold"
-                          style={{ color: INK }}
-                        >
+                        <span className="text-sm font-bold" style={{ color: INK }}>
                           {setIdx + 1}
                         </span>
                       )}
                     </button>
                   ))}
                 </div>
+
+                {/* PESO */}
+                <div className="flex items-center justify-between rounded-xl px-3 py-2" style={{ background: "rgba(255,255,255,0.5)" }}>
+                  <span className="text-xs font-medium" style={{ color: "rgba(58,55,66,0.6)" }}>
+                    {w && !isToday ? `Ultima volta: ${w.value} kg` : "Peso"}
+                  </span>
+                  <div className="flex items-center gap-3">
+                    <button
+                      onClick={() => changeWeight(exIdx, -2.5)}
+                      className="w-7 h-7 rounded-full flex items-center justify-center active:scale-90 transition-transform"
+                      style={{ background: BUTTON }}
+                      aria-label="Diminuisci peso"
+                    >
+                      <Minus size={13} color={INK} />
+                    </button>
+                    <span className="text-sm font-bold tabular-nums" style={{ color: INK, minWidth: "40px", textAlign: "center" }}>
+                      {(w?.value ?? 0)} kg
+                    </span>
+                    <button
+                      onClick={() => changeWeight(exIdx, 2.5)}
+                      className="w-7 h-7 rounded-full flex items-center justify-center active:scale-90 transition-transform"
+                      style={{ background: BUTTON }}
+                      aria-label="Aumenta peso"
+                    >
+                      <Plus size={13} color={INK} />
+                    </button>
+                  </div>
+                </div>
               </div>
             );
           })}
         </div>
 
-        {/* WEEK SUMMARY — bubble cluster */}
+        {/* WEEK SUMMARY */}
         <div className="rounded-3xl p-5" style={{ background: CARD }}>
           <div className="flex items-start justify-between mb-1">
             <p className="text-sm font-semibold" style={{ color: INK }}>
@@ -637,10 +1004,7 @@ export default function SchedaGianmaria() {
             </button>
           </div>
           <p className="text-xs mb-2" style={{ color: "rgba(58,55,66,0.55)" }}>
-            {sessionsThisWeek}{" "}
-            {sessionsThisWeek === 1
-              ? "sessione completata"
-              : "sessioni completate"}
+            {sessionsThisWeek} {sessionsThisWeek === 1 ? "sessione completata" : "sessioni completate"}
           </p>
           <BubbleCluster days={DAYS} history={history} weekStart={weekStart} />
         </div>
