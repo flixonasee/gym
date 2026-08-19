@@ -9,6 +9,7 @@ import {
   Plus,
   X,
   ShoppingBag,
+  Lock,
 } from "lucide-react";
 
 /* ---------------------------------------------------------------
@@ -309,13 +310,17 @@ function BubbleCluster({ days, history, weekStart }) {
    GYM BAG CHECKLIST
 --------------------------------------------------------------- */
 
-function GymBag({ checked, onToggle }) {
-  const [open, setOpen] = useState(false);
+function GymBag({ checked, onToggle, nudge }) {
+  const [manuallyOpened, setManuallyOpened] = useState(false);
+  const open = manuallyOpened || nudge;
   const done = checked.filter(Boolean).length;
 
   return (
-    <div className="rounded-2xl p-4 mb-4" style={{ background: CARD }}>
-      <button className="w-full flex items-center justify-between" onClick={() => setOpen((o) => !o)}>
+    <div
+      className="rounded-2xl p-4 mb-4"
+      style={{ background: CARD, boxShadow: nudge ? `0 0 0 2px ${TERRACOTTA}` : "none" }}
+    >
+      <button className="w-full flex items-center justify-between" onClick={() => setManuallyOpened((o) => !o)}>
         <div className="flex items-center gap-2">
           <ShoppingBag size={16} color={INK} />
           <span className="text-sm font-semibold" style={{ color: INK }}>
@@ -329,6 +334,12 @@ function GymBag({ checked, onToggle }) {
           {done}/{BAG_ITEMS.length}
         </span>
       </button>
+
+      {nudge && (
+        <p className="text-xs font-semibold mt-2" style={{ color: TERRACOTTA }}>
+          Completa la borsa per sbloccare gli esercizi
+        </p>
+      )}
 
       {open && (
         <div className="flex flex-col gap-2 mt-3">
@@ -357,6 +368,7 @@ function GymBag({ checked, onToggle }) {
     </div>
   );
 }
+
 
 /* ---------------------------------------------------------------
    REST TIMER BAR
@@ -392,6 +404,73 @@ function RestTimerBar({ remaining, duration, onSkip }) {
 /* ---------------------------------------------------------------
    SETTINGS PAGE
 --------------------------------------------------------------- */
+
+/* ---------------------------------------------------------------
+   CELEBRAZIONE FINE GIORNATA
+--------------------------------------------------------------- */
+
+const CONFETTI_COLORS = [YELLOW, OLIVE, TERRACOTTA, BLUE, LAVENDER, GREEN_GAMBE];
+
+function Celebration({ onDone }) {
+  useEffect(() => {
+    const t = setTimeout(onDone, 2600);
+    return () => clearTimeout(t);
+  }, [onDone]);
+
+  const dots = Array.from({ length: 20 });
+
+  return (
+    <div
+      className="fixed inset-0 flex items-center justify-center z-50 px-6"
+      style={{ background: "rgba(58,55,66,0.5)" }}
+      onClick={onDone}
+    >
+      <style>{`
+        @keyframes confettiFall {
+          0% { transform: translateY(-16px) rotate(0deg); opacity: 0; }
+          12% { opacity: 1; }
+          100% { transform: translateY(170px) rotate(360deg); opacity: 0; }
+        }
+        @keyframes popIn {
+          0% { transform: scale(0.7); opacity: 0; }
+          60% { transform: scale(1.05); opacity: 1; }
+          100% { transform: scale(1); opacity: 1; }
+        }
+      `}</style>
+      <div
+        className="relative rounded-3xl px-8 py-10 text-center overflow-hidden w-full max-w-xs"
+        style={{ background: BUTTON, animation: "popIn 0.4s ease" }}
+      >
+        {dots.map((_, i) => (
+          <span
+            key={i}
+            className="absolute rounded-full pointer-events-none"
+            style={{
+              top: "-12px",
+              left: `${(i / dots.length) * 100}%`,
+              width: 7 + (i % 3) * 4,
+              height: 7 + (i % 3) * 4,
+              background: CONFETTI_COLORS[i % CONFETTI_COLORS.length],
+              animation: `confettiFall ${1.3 + (i % 5) * 0.15}s ease-in ${i * 0.05}s forwards`,
+            }}
+          />
+        ))}
+        <img
+          src="/celebration.png"
+          alt=""
+          className="mx-auto mb-2 relative"
+          style={{ width: "150px", height: "150px", objectFit: "contain" }}
+        />
+        <p className="font-extrabold" style={{ color: INK, fontSize: "22px" }}>
+          Giornata completata!
+        </p>
+        <p className="text-sm mt-1.5" style={{ color: "rgba(58,55,66,0.6)" }}>
+          Ottimo lavoro 💪
+        </p>
+      </div>
+    </div>
+  );
+}
 
 function SettingsPage({ restDuration, onChangeDuration, notifyEnabled, onToggleNotify, onBack }) {
   return (
@@ -507,6 +586,7 @@ export default function SchedaGianmaria() {
   const [restDuration, setRestDuration] = useState(90);
   const [restEndAt, setRestEndAt] = useState(null);
   const [notifyEnabled, setNotifyEnabled] = useState(false);
+  const [celebrate, setCelebrate] = useState(false);
   const [now, setNow] = useState(Date.now());
   const tickRef = useRef(null);
   const audioCtxRef = useRef(null);
@@ -697,6 +777,8 @@ export default function SchedaGianmaria() {
   }, []);
 
   const toggleSet = (exIdx, setIdx) => {
+    if (!bagChecked.every(Boolean)) return; // la borsa deve essere completa prima di poter allenarsi
+
     const next = progress.map((row) => row.slice());
     const wasDone = next[exIdx][setIdx];
     next[exIdx][setIdx] = !wasDone;
@@ -704,9 +786,26 @@ export default function SchedaGianmaria() {
     saveProgress(day, next);
 
     if (!wasDone) {
-      startRestTimer();
-      const allDone = next.every((row) => row.every(Boolean));
-      if (allDone) recordCompletion(day);
+      const setsAllDone = next.every((row) => row.every(Boolean));
+      if (setsAllDone) {
+        // hai finito gli esercizi: se un recupero della serie precedente
+        // era ancora in corso, lo interrompiamo, non ha piu senso
+        skipRestTimer();
+        maybeCompleteDay(next, bagChecked);
+      } else {
+        startRestTimer();
+      }
+    }
+  };
+
+  const maybeCompleteDay = (setsArr, bagArr) => {
+    const alreadyRecorded = (history[day.id] || []).includes(todayISO());
+    if (alreadyRecorded) return;
+    const setsAllDone = setsArr.every((row) => row.every(Boolean));
+    const bagAllDone = bagArr.every(Boolean);
+    if (setsAllDone && bagAllDone) {
+      recordCompletion(day);
+      setCelebrate(true);
     }
   };
 
@@ -744,6 +843,7 @@ export default function SchedaGianmaria() {
     next[i] = !next[i];
     setBagChecked(next);
     storeSet(`gym-bag:${todayISO()}`, JSON.stringify(next));
+    maybeCompleteDay(progress, next);
   };
 
   /* ---- reset ---- */
@@ -881,7 +981,11 @@ export default function SchedaGianmaria() {
         </div>
 
         {/* BORSA DELLA PALESTRA */}
-        <GymBag checked={bagChecked} onToggle={toggleBagItem} />
+        <GymBag
+          checked={bagChecked}
+          onToggle={toggleBagItem}
+          nudge={!bagChecked.every(Boolean)}
+        />
 
         {/* HERO DAY CARD */}
         <div className="rounded-3xl p-6 mb-4 relative overflow-hidden" style={{ background: day.color }}>
@@ -913,6 +1017,14 @@ export default function SchedaGianmaria() {
         </div>
 
         {/* EXERCISES */}
+        {!bagChecked.every(Boolean) && (
+          <div className="rounded-2xl p-4 mb-2.5 flex items-center gap-2.5" style={{ background: CARD }}>
+            <Lock size={15} color={TERRACOTTA} />
+            <p className="text-xs font-semibold" style={{ color: TERRACOTTA }}>
+              Completa la borsa qui sopra per iniziare gli esercizi
+            </p>
+          </div>
+        )}
         <div className="flex flex-col gap-2.5 mb-6">
           {day.exercises.map((ex, exIdx) => {
             const cat = CATEGORY[ex.cat];
@@ -920,9 +1032,14 @@ export default function SchedaGianmaria() {
             const rowDone = row.filter(Boolean).length;
             const w = weights[exIdx];
             const isToday = w && w.date === todayISO();
+            const locked = !bagChecked.every(Boolean);
 
             return (
-              <div key={exIdx} className="rounded-2xl p-4" style={{ background: CARD, boxShadow: "0 1px 0 rgba(58,55,66,0.08)" }}>
+              <div
+                key={exIdx}
+                className="rounded-2xl p-4"
+                style={{ background: CARD, boxShadow: "0 1px 0 rgba(58,55,66,0.08)", opacity: locked ? 0.5 : 1 }}
+              >
                 <div className="flex items-center justify-between mb-2">
                   <span className="text-[10px] font-bold px-2.5 py-1 rounded-full" style={{ color: INK, background: cat.color }}>
                     {cat.label}
@@ -941,8 +1058,9 @@ export default function SchedaGianmaria() {
                     <button
                       key={setIdx}
                       onClick={() => toggleSet(exIdx, setIdx)}
+                      disabled={locked}
                       className="flex-1 h-12 rounded-full flex items-center justify-center active:scale-95 transition-transform"
-                      style={{ background: setDone ? OLIVE : BUTTON }}
+                      style={{ background: setDone ? OLIVE : BUTTON, cursor: locked ? "not-allowed" : "pointer" }}
                       aria-label={`Serie ${setIdx + 1} di ${ex.name}`}
                     >
                       {setDone ? (
@@ -1009,6 +1127,8 @@ export default function SchedaGianmaria() {
           <BubbleCluster days={DAYS} history={history} weekStart={weekStart} />
         </div>
       </div>
+
+      {celebrate && <Celebration onDone={() => setCelebrate(false)} />}
     </div>
   );
 }
